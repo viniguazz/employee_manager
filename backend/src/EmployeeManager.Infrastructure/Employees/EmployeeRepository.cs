@@ -85,4 +85,49 @@ public sealed class EmployeeRepository : IEmployeeRepository
             e.ManagerName
         );
     }
+
+    public async Task UpdateAsync(Employee employee, CancellationToken ct)
+    {
+        var existing = await _db.Employees
+        .FirstOrDefaultAsync(e => e.Id == employee.Id, ct);
+
+
+        if (existing is null)
+        throw new InvalidOperationException("Employee not found.");
+
+        existing.FirstName = employee.FirstName;
+        existing.LastName = employee.LastName;
+        existing.Email = employee.Email;
+        existing.BirthDate = employee.BirthDate;
+        existing.Role = employee.Role;
+        existing.ManagerEmployeeId = employee.ManagerEmployeeId;
+        existing.ManagerName = employee.ManagerName;
+
+        await _db.EmployeePhones
+        .Where(p => p.EmployeeId == employee.Id)
+        .ExecuteDeleteAsync(ct);
+
+        var newPhones = employee.Phones.Select(p => new EmployeePhoneEntity
+        {
+        Id = Guid.NewGuid(),
+        EmployeeId = employee.Id,
+        Number = p.Number,
+        Type = p.Type
+        }).ToList();
+
+        _db.EmployeePhones.AddRange(newPhones);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<bool> RemoveAsync(Guid id, CancellationToken ct)
+    {
+        var existing = await _db.Employees.FirstOrDefaultAsync(e => e.Id == id, ct);
+        if (existing is null) return false;
+
+        _db.Employees.Remove(existing);
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
 }

@@ -13,6 +13,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<CreateEmployee>();
 
+builder.Services.AddScoped<GetEmployee>();
+builder.Services.AddScoped<ListEmployees>();
+
+builder.Services.AddScoped<UpdateEmployee>();
+builder.Services.AddScoped<DeleteEmployee>();
+
 // EF Core + Postgres
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
