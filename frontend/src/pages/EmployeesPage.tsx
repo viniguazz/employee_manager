@@ -119,58 +119,60 @@ export default function EmployeesPage() {
           />
         )}
 
-        <div className="card shadow-sm">
-          {loading ? (
-            <div className="p-3 text-muted">Loading...</div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-striped table-hover align-middle mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Document</th>
-                    <th>Role</th>
-                    <th>Phones</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((e) => (
-                    <tr key={e.id}>
-                      <td>{e.firstName} {e.lastName}</td>
-                      <td>{e.email}</td>
-                      <td>{e.docNumber}</td>
-                      <td className="text-capitalize">{formatRole(e.role)}</td>
-                      <td>
-                        {e.phones?.map((p, idx) => (
-                          <div key={idx} className="small text-muted">
-                            {p.number}
-                          </div>
-                        ))}
-                      </td>
-                      <td className="text-nowrap">
-                        <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => { setEditing(e); setMode("edit"); }}>
-                            Edit
-                          </button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(e.id)}>
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {items.length === 0 && (
+        {mode === "none" && (
+          <div className="card shadow-sm">
+            {loading ? (
+              <div className="p-3 text-muted">Loading...</div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-striped table-hover align-middle mb-0">
+                  <thead className="table-light">
                     <tr>
-                      <td colSpan={6} className="text-center text-muted py-4">No employees.</td>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Document</th>
+                      <th>Role</th>
+                      <th>Phones</th>
+                      <th></th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {items.map((e) => (
+                      <tr key={e.id}>
+                        <td>{e.firstName} {e.lastName}</td>
+                        <td>{e.email}</td>
+                        <td>{e.docNumber}</td>
+                        <td className="text-capitalize">{formatRole(e.role)}</td>
+                        <td>
+                          {e.phones?.map((p, idx) => (
+                            <div key={idx} className="small text-muted">
+                              {p.number}
+                            </div>
+                          ))}
+                        </td>
+                        <td className="text-nowrap">
+                          <div className="d-flex gap-2">
+                            <button className="btn btn-sm btn-outline-primary" onClick={() => { setEditing(e); setMode("edit"); }}>
+                              Edit
+                            </button>
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(e.id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {items.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center text-muted py-4">No employees.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {mode !== "none" && (
           <div className="d-flex justify-content-end mt-3">
