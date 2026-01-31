@@ -1,3 +1,4 @@
+using EmployeeManager.Api.Middleware;
 using EmployeeManager.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using EmployeeManager.Application.Employees;
@@ -100,6 +101,8 @@ builder.Services.AddCors(opt =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
