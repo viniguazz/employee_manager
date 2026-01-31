@@ -28,13 +28,22 @@ public sealed class UpdateEmployee
         if (existing is null)
             throw new InvalidOperationException("Employee not found.");
 
-        var phones = cmd.Phones.Select(p => new Phone(p.Number, p.Type)).ToList();
+        var email = cmd.Email.Trim();
+        var phoneNumbers = cmd.Phones.Select(p => p.Number.Trim()).ToList();
+
+        if (await _repo.EmailExistsAsync(email, existing.Id, ct))
+            throw new InvalidOperationException("Email already exists.");
+
+        if (await _repo.PhoneNumbersExistAsync(phoneNumbers, existing.Id, ct))
+            throw new InvalidOperationException("Phone number already exists.");
+
+        var phones = cmd.Phones.Select(p => new Phone(p.Number.Trim(), p.Type)).ToList();
 
         var updated = Employee.Rehydrate(
             existing.Id,
             cmd.FirstName,
             cmd.LastName,
-            cmd.Email,
+            email,
             existing.DocNumber,
             cmd.BirthDate,
             cmd.Role,

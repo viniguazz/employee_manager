@@ -15,6 +15,22 @@ public sealed class EmployeeRepository : IEmployeeRepository
     public Task<bool> DocNumberExistsAsync(string docNumber, CancellationToken ct)
         => _db.Employees.AnyAsync(e => e.DocNumber == docNumber, ct);
 
+    public Task<bool> EmailExistsAsync(string email, Guid? excludeEmployeeId, CancellationToken ct)
+    {
+        var normalized = email.ToLower();
+        return _db.Employees.AnyAsync(e =>
+            e.Email.ToLower() == normalized &&
+            (!excludeEmployeeId.HasValue || e.Id != excludeEmployeeId.Value), ct);
+    }
+
+    public Task<bool> PhoneNumbersExistAsync(IEnumerable<string> numbers, Guid? excludeEmployeeId, CancellationToken ct)
+    {
+        var list = numbers.ToList();
+        return _db.EmployeePhones.AnyAsync(p =>
+            list.Contains(p.Number) &&
+            (!excludeEmployeeId.HasValue || p.EmployeeId != excludeEmployeeId.Value), ct);
+    }
+
     public async Task AddAsync(Employee employee, CancellationToken ct)
     {
         var entity = ToEntity(employee);

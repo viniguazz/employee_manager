@@ -35,15 +35,25 @@ public sealed class CreateEmployee
         if ((int)cmd.Role > (int)cmd.CreatorRole)
             throw new InvalidOperationException("You cannot create an employee with higher permissions than yours.");
 
-        if (await _repo.DocNumberExistsAsync(cmd.DocNumber.Trim(), ct))
+        var email = cmd.Email.Trim();
+        var docNumber = cmd.DocNumber.Trim();
+        var phoneNumbers = cmd.Phones.Select(p => p.Number.Trim()).ToList();
+
+        if (await _repo.DocNumberExistsAsync(docNumber, ct))
             throw new InvalidOperationException("Document number already exists.");
 
-        var phones = cmd.Phones.Select(p => new Phone(p.Number, p.Type)).ToList();
+        if (await _repo.EmailExistsAsync(email, null, ct))
+            throw new InvalidOperationException("Email already exists.");
+
+        if (await _repo.PhoneNumbersExistAsync(phoneNumbers, null, ct))
+            throw new InvalidOperationException("Phone number already exists.");
+
+        var phones = cmd.Phones.Select(p => new Phone(p.Number.Trim(), p.Type)).ToList();
 
         var passwordHash = _hasher.Hash(cmd.Password);
 
         var employee = new Employee(
-            cmd.FirstName, cmd.LastName, cmd.Email, cmd.DocNumber,
+            cmd.FirstName, cmd.LastName, email, docNumber,
             cmd.BirthDate, cmd.Role, phones, passwordHash,
             cmd.ManagerEmployeeId, cmd.ManagerName);
 

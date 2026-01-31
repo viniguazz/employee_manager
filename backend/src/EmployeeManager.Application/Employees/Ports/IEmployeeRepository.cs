@@ -5,6 +5,8 @@ namespace EmployeeManager.Application.Employees.Ports;
 public interface IEmployeeRepository
 {
     Task<bool> DocNumberExistsAsync(string docNumber, CancellationToken ct);
+    Task<bool> EmailExistsAsync(string email, Guid? excludeEmployeeId, CancellationToken ct);
+    Task<bool> PhoneNumbersExistAsync(IEnumerable<string> numbers, Guid? excludeEmployeeId, CancellationToken ct);
     Task AddAsync(Employee employee, CancellationToken ct);
 
     Task<Employee?> GetByIdAsync(Guid id, CancellationToken ct);

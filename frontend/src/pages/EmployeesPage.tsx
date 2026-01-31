@@ -5,8 +5,8 @@ import "./EmployeesPage.css";
 
 function emptyPhones(): Phone[] {
   return [
-    { number: "+55 48 99999-1111" },
-    { number: "+55 48 3333-2222" },
+    { number: "" },
+    { number: "" },
   ];
 }
 
@@ -199,6 +199,7 @@ function EmployeeForm(props:
 
   const [role, setRole] = useState<number>(isCreate ? 1 : props.employee.role);
   const [password, setPassword] = useState(isCreate ? "Ana#12345678" : "");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [phones, setPhones] = useState<Phone[]>(
     isCreate ? emptyPhones() : (props.employee.phones?.length ? props.employee.phones : emptyPhones())
@@ -289,7 +290,29 @@ function EmployeeForm(props:
               </div>
               <div className="col-md-6">
                 <label className="form-label">Password</label>
-                <input className="form-control" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <div className="input-group">
+                  <input
+                    className="form-control"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                      <path
+                        d="M12 5C6.5 5 2 9 1 12c1 3 5.5 7 11 7s10-4 11-7c-1-3-5.5-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
+                        fill="currentColor"
+                      />
+                      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -302,7 +325,7 @@ function EmployeeForm(props:
               <span className="input-group-text"># {idx + 1}</span>
               <input
                 className="form-control"
-                placeholder="number"
+                placeholder={idx === 0 ? "55-48-999991111" : "55-48-33332222"}
                 value={p.number}
                 onChange={(e) => updatePhoneNumber(idx, e.target.value)}
               />
