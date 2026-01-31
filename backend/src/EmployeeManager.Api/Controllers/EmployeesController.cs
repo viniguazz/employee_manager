@@ -2,9 +2,11 @@ using EmployeeManager.Api.Contracts.Employees;
 using EmployeeManager.Application.Employees;
 using EmployeeManager.Domain.Employees;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EmployeeManager.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("employees")]
 public sealed class EmployeesController : ControllerBase
@@ -17,6 +19,8 @@ public sealed class EmployeesController : ControllerBase
     {
         var passwordHash = "TEMP_HASH_" + req.Password;
 
+        var creatorRoleStr = User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value;
+        var creatorRole = Enum.Parse<EmployeeManager.Domain.Roles.Role>(creatorRoleStr);
         var id = await useCase.ExecuteAsync(new CreateEmployeeCommand(
             req.FirstName,
             req.LastName,
@@ -25,9 +29,10 @@ public sealed class EmployeesController : ControllerBase
             req.BirthDate,
             req.Role,
             req.Phones.Select(p => (p.Number, p.Type)).ToList(),
-            passwordHash,
+            req.Password,
             req.ManagerEmployeeId,
-            req.ManagerName
+            req.ManagerName,
+            creatorRole
         ), ct);
 
         return Created($"/employees/{id}", new { id });

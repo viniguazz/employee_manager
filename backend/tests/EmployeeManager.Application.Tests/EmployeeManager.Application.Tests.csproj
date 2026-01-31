@@ -20,4 +20,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\EmployeeManager.Application\EmployeeManager.Application.csproj" />
+    <ProjectReference Include="..\..\src\EmployeeManager.Domain\EmployeeManager.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

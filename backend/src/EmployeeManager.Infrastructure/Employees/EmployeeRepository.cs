@@ -130,4 +130,12 @@ public sealed class EmployeeRepository : IEmployeeRepository
         return true;
     }
 
+    public async Task<Employee?> GetByEmailAsync(string email, CancellationToken ct)
+    {
+        var entity = await _db.Employees
+        .Include(e => e.Phones)
+        .FirstOrDefaultAsync(e => e.Email == email.ToLower(), ct);
+        return entity is null ? null : ToDomain(entity);
+    }
+
 }
