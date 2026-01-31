@@ -36,7 +36,7 @@ public sealed class CreateEmployee
             throw new InvalidOperationException("You cannot create an employee with higher permissions than yours.");
 
         if (await _repo.DocNumberExistsAsync(cmd.DocNumber.Trim(), ct))
-            throw new InvalidOperationException("Doc number already exists.");
+            throw new InvalidOperationException("Document number already exists.");
 
         var phones = cmd.Phones.Select(p => new Phone(p.Number, p.Type)).ToList();
 

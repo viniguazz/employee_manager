@@ -74,102 +74,112 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="page">
-      <nav className="topbar">
-        <div className="topbar__brand">Employee Manager</div>
-        <div className="topbar__actions">
-          {mode !== "create" && (
-            <button
-              className="btn btn--primary"
-              onClick={() => { setMode("create"); setEditing(null); }}
-            >
-              + New
-            </button>
-          )}
-          <button className="btn btn--ghost" onClick={logout}>Exit</button>
+    <div className="bg-light min-vh-100">
+      <nav className="navbar navbar-dark bg-dark shadow-sm">
+        <div className="container">
+          <span className="navbar-brand fw-semibold">Employee Manager</span>
+          <div className="d-flex gap-2">
+            {mode !== "create" && (
+              <button
+                className="btn btn-primary"
+                onClick={() => { setMode("create"); setEditing(null); }}
+              >
+                + New
+              </button>
+            )}
+            <button className="btn btn-outline-light" onClick={logout}>Exit</button>
+          </div>
         </div>
       </nav>
 
-      <div className="page__header">
-        <h2 className="page__title">{title}</h2>
-        <p className="page__subtitle">Manage your team and key information.</p>
-      </div>
+      <div className="container py-4">
+        <div className="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+          <div>
+            <h2 className="h4 mb-1">{title}</h2>
+            <p className="text-muted mb-0">Manage your team and key information.</p>
+          </div>
+        </div>
 
-      {err && <div className="alert alert--error">{err}</div>}
+        {err && <div className="alert alert-danger" role="alert">{err}</div>}
 
-      {mode === "create" && (
-        <EmployeeForm
-          mode="create"
-          onCancel={() => setMode("none")}
-          onCreate={onCreate}
-        />
-      )}
+        {mode === "create" && (
+          <EmployeeForm
+            mode="create"
+            onCancel={() => setMode("none")}
+            onCreate={onCreate}
+          />
+        )}
 
-      {mode === "edit" && editing && (
-        <EmployeeForm
-          mode="edit"
-          employee={editing}
-          onCancel={() => { setMode("none"); setEditing(null); }}
-          onUpdate={(payload) => onUpdate(editing.id, payload)}
-        />
-      )}
+        {mode === "edit" && editing && (
+          <EmployeeForm
+            mode="edit"
+            employee={editing}
+            onCancel={() => { setMode("none"); setEditing(null); }}
+            onUpdate={(payload) => onUpdate(editing.id, payload)}
+          />
+        )}
 
-      <div className="card table-card">
-        {loading ? (
-          <p className="muted">Loading...</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Document</th>
-                <th>Role</th>
-                <th>Phones</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((e) => (
-                <tr key={e.id}>
-                  <td>{e.firstName} {e.lastName}</td>
-                  <td>{e.email}</td>
-                  <td>{e.docNumber}</td>
-                  <td>{formatRole(e.role)}</td>
-                  <td>
-                    {e.phones?.map((p, idx) => (
-                      <div key={idx} className="phone-item">
-                        {p.number}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="actions">
-                    <button className="btn btn--light" onClick={() => { setEditing(e); setMode("edit"); }}>
-                      Edit
-                    </button>
-                    <button className="btn btn--danger" onClick={() => onDelete(e.id)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="empty">No employees.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="card shadow-sm">
+          {loading ? (
+            <div className="p-3 text-muted">Loading...</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-striped table-hover align-middle mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Document</th>
+                    <th>Role</th>
+                    <th>Phones</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((e) => (
+                    <tr key={e.id}>
+                      <td>{e.firstName} {e.lastName}</td>
+                      <td>{e.email}</td>
+                      <td>{e.docNumber}</td>
+                      <td className="text-capitalize">{formatRole(e.role)}</td>
+                      <td>
+                        {e.phones?.map((p, idx) => (
+                          <div key={idx} className="small text-muted">
+                            {p.number}
+                          </div>
+                        ))}
+                      </td>
+                      <td className="text-nowrap">
+                        <div className="d-flex gap-2">
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => { setEditing(e); setMode("edit"); }}>
+                            Edit
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(e.id)}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {items.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-center text-muted py-4">No employees.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {mode !== "none" && (
+          <div className="d-flex justify-content-end mt-3">
+            <button className="btn btn-outline-secondary" type="button" onClick={() => { setMode("none"); setEditing(null); }}>
+              Back
+            </button>
+          </div>
         )}
       </div>
-
-      {mode !== "none" && (
-        <div className="footer-actions">
-          <button className="btn btn--light" type="button" onClick={() => { setMode("none"); setEditing(null); }}>
-            Back
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -242,77 +252,80 @@ function EmployeeForm(props:
   }
 
   return (
-    <form onSubmit={submit} className="card employee-form">
-      <div className="form-grid">
-        <div className="form-field">
-          <label>First name</label>
-          <input className="input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        </div>
-        <div className="form-field">
-          <label>Last name</label>
-          <input className="input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        </div>
-
-        <div className="form-field">
-          <label>Email</label>
-          <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-
-        {isCreate && (
-          <>
-            <div className="form-field">
-              <label>Document number</label>
-              <input className="input" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} />
-            </div>
-            <div className="form-field">
-              <label>Birth date</label>
-              <input className="input" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-            </div>
-            <div className="form-field">
-              <label>Role</label>
-              <select className="input" value={role} onChange={(e) => setRole(Number(e.target.value))}>
-                <option value={0}>employee</option>
-                <option value={1}>leader</option>
-                <option value={2}>director</option>
-              </select>
-            </div>
-            <div className="form-field">
-              <label>Password</label>
-              <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="form-field">
-        <label>Phones (minimum 2)</label>
-        {phones.map((p, idx) => (
-          <div key={idx} className="phone-row">
-            <input
-              className="input"
-              placeholder="number"
-              value={p.number}
-              onChange={(e) => updatePhoneNumber(idx, e.target.value)}
-            />
+    <form onSubmit={submit} className="card shadow-sm mb-4">
+      <div className="card-body">
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">First name</label>
+            <input className="form-control" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
           </div>
-        ))}
-        <div className="inline-actions">
-          <button className="btn btn--light" type="button" onClick={() => setPhones((p) => [...p, { number: "" }])}>
-            + Add phone
-          </button>
-          <button className="btn btn--light" type="button" onClick={() => setPhones((p) => (p.length > 2 ? p.slice(0, -1) : p))}>
-            - Remove last
-          </button>
+          <div className="col-md-6">
+            <label className="form-label">Last name</label>
+            <input className="form-control" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          </div>
+
+          <div className="col-md-6">
+            <label className="form-label">Email</label>
+            <input className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+
+          {isCreate && (
+            <>
+              <div className="col-md-6">
+                <label className="form-label">Document number</label>
+                <input className="form-control" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Birth date</label>
+                <input className="form-control" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Role</label>
+                <select className="form-select" value={role} onChange={(e) => setRole(Number(e.target.value))}>
+                  <option value={0}>employee</option>
+                  <option value={1}>leader</option>
+                  <option value={2}>director</option>
+                </select>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Password</label>
+                <input className="form-control" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+            </>
+          )}
         </div>
-      </div>
 
-      {err && <div className="alert alert--error">{err}</div>}
+        <div className="mt-3">
+          <label className="form-label">Phones (minimum 2)</label>
+          {phones.map((p, idx) => (
+            <div key={idx} className="input-group mb-2">
+              <span className="input-group-text"># {idx + 1}</span>
+              <input
+                className="form-control"
+                placeholder="number"
+                value={p.number}
+                onChange={(e) => updatePhoneNumber(idx, e.target.value)}
+              />
+            </div>
+          ))}
+          <div className="d-flex gap-2 mt-2">
+            <button className="btn btn-outline-secondary" type="button" onClick={() => setPhones((p) => [...p, { number: "" }])}>
+              + Add phone
+            </button>
+            <button className="btn btn-outline-secondary" type="button" onClick={() => setPhones((p) => (p.length > 2 ? p.slice(0, -1) : p))}>
+              - Remove last
+            </button>
+          </div>
+        </div>
 
-      <div className="form-actions">
-        <button className="btn btn--primary" disabled={saving} type="submit">
-          {saving ? "Saving..." : "Save"}
-        </button>
-        <button className="btn btn--light" type="button" onClick={props.onCancel}>Cancel</button>
+        {err && <div className="alert alert-danger mt-3" role="alert">{err}</div>}
+
+        <div className="d-flex gap-2 mt-3">
+          <button className="btn btn-primary" disabled={saving} type="submit">
+            {saving ? "Saving..." : "Save"}
+          </button>
+          <button className="btn btn-outline-secondary" type="button" onClick={props.onCancel}>Cancel</button>
+        </div>
       </div>
     </form>
   );
