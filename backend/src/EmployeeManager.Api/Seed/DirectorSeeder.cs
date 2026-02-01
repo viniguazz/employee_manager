@@ -64,14 +64,14 @@ public static class DirectorSeeder
                 {
                     Id = Guid.NewGuid(),
                     EmployeeId = directorId,
-                    Number = "+55 48 99999-0000",
+                    Number = "999990000",
                     Type = "seed"
                 },
                 new()
                 {
                     Id = Guid.NewGuid(),
                     EmployeeId = directorId,
-                    Number = "+55 48 3333-0000",
+                    Number = "333300000",
                     Type = "seed"
                 }
             }

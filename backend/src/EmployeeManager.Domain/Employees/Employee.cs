@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using EmployeeManager.Domain.Roles;
 
 namespace EmployeeManager.Domain.Employees;
@@ -41,8 +42,8 @@ public sealed class Employee
         Id = Guid.NewGuid();
         FirstName = Require(firstName, "First name");
         LastName = Require(lastName, "Last name");
-        Email = Require(email, "Email").ToLowerInvariant();
-        DocNumber = Require(docNumber, "Doc number");
+        Email = ValidateEmail(Require(email, "Email")).ToLowerInvariant();
+        DocNumber = ValidateDocNumber(Require(docNumber, "Doc number"));
 
         BirthDate = birthDate;
         EnsureAdult(birthDate);
@@ -87,6 +88,28 @@ public sealed class Employee
         value = (value ?? "").Trim();
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException($"{field} is required.");
+        return value;
+    }
+
+    private static string ValidateEmail(string value)
+    {
+        try
+        {
+            var addr = new MailAddress(value);
+            if (addr.Address != value)
+                throw new ArgumentException("Email is invalid.");
+            return value;
+        }
+        catch (FormatException)
+        {
+            throw new ArgumentException("Email is invalid.");
+        }
+    }
+
+    private static string ValidateDocNumber(string value)
+    {
+        if (!value.All(char.IsDigit))
+            throw new ArgumentException("Doc number must contain only digits.");
         return value;
     }
 
