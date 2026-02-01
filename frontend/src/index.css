@@ -11,3 +11,8 @@ body {
 #root {
   min-height: 100vh;
 }
+
+.form-control::placeholder,
+.form-select::placeholder {
+  color: #9ca3af;
+}

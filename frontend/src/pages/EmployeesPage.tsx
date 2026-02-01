@@ -199,17 +199,17 @@ function EmployeeForm(props:
     return d.toISOString().slice(0, 10);
   }
 
-  const [firstName, setFirstName] = useState(isCreate ? "John" : props.employee.firstName);
-  const [lastName, setLastName] = useState(isCreate ? "Doe" : props.employee.lastName);
-  const [email, setEmail] = useState(isCreate ? "john@ex.com" : props.employee.email);
+  const [firstName, setFirstName] = useState(isCreate ? "" : props.employee.firstName);
+  const [lastName, setLastName] = useState(isCreate ? "" : props.employee.lastName);
+  const [email, setEmail] = useState(isCreate ? "" : props.employee.email);
 
-  const [docNumber, setDocNumber] = useState(isCreate ? "DOC-001" : props.employee.docNumber);
+  const [docNumber, setDocNumber] = useState(isCreate ? "" : props.employee.docNumber);
   const [birthDate, setBirthDate] = useState(
-    isCreate ? "1999-01-01" : toInputDate(props.employee.birthDate)
+    isCreate ? "" : toInputDate(props.employee.birthDate)
   );
 
   const [role, setRole] = useState<number>(isCreate ? 1 : props.employee.role);
-  const [password, setPassword] = useState(isCreate ? "Ana#12345678" : "");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [phones, setPhones] = useState<Phone[]>(
@@ -285,7 +285,11 @@ function EmployeeForm(props:
             <>
               <div className="col-md-6">
                 <label className="form-label">Document number</label>
-                <input className="form-control" value={docNumber} onChange={(e) => setDocNumber(e.target.value)} />
+                <input
+                  className="form-control"
+                  value={docNumber}
+                  onChange={(e) => setDocNumber(e.target.value)}
+                />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Birth date</label>
@@ -341,7 +345,6 @@ function EmployeeForm(props:
               <span className="input-group-text"># {idx + 1}</span>
               <input
                 className="form-control"
-                placeholder={idx === 0 ? "55-48-999991111" : "55-48-33332222"}
                 value={p.number}
                 onChange={(e) => updatePhoneNumber(idx, e.target.value)}
               />
