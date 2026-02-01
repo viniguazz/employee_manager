@@ -68,6 +68,9 @@ public sealed class Employee
         var phoneList = phones?.ToList() ?? new List<Phone>();
         if (phoneList.Count < 2)
             throw new ArgumentException("At least two phones are required.");
+        var distinctCount = phoneList.Select(p => p.Number).Distinct().Count();
+        if (distinctCount != phoneList.Count)
+            throw new ArgumentException("Phone numbers must be unique.");
         _phones.AddRange(phoneList);
 
         PasswordHash = Require(passwordHash, "Password hash");

@@ -15,6 +15,19 @@ export default function EmployeesPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  function getCurrentUserId(): string | null {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    try {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+      return payload.sub || null;
+    } catch {
+      return null;
+    }
+  }
+
   const [mode, setMode] = useState<"none" | "create" | "edit">("none");
   const [editing, setEditing] = useState<Employee | null>(null);
 
@@ -73,6 +86,8 @@ export default function EmployeesPage() {
     await load();
   }
 
+  const currentUserId = getCurrentUserId();
+
   return (
     <div className="bg-light min-vh-100">
       <nav className="navbar navbar-dark bg-dark shadow-sm">
@@ -106,6 +121,7 @@ export default function EmployeesPage() {
           <EmployeeForm
             mode="create"
             employees={items}
+            currentUserId={currentUserId}
             onCancel={() => setMode("none")}
             onCreate={onCreate}
           />
@@ -116,6 +132,7 @@ export default function EmployeesPage() {
             mode="edit"
             employee={editing}
             employees={items}
+            currentUserId={currentUserId}
             onCancel={() => { setMode("none"); setEditing(null); }}
             onUpdate={(payload) => onUpdate(editing.id, payload)}
           />
@@ -189,8 +206,8 @@ export default function EmployeesPage() {
 }
 
 function EmployeeForm(props:
-  | { mode: "create"; employees: Employee[]; onCancel: () => void; onCreate: (p: CreateEmployeeRequest) => Promise<void> }
-  | { mode: "edit"; employee: Employee; employees: Employee[]; onCancel: () => void; onUpdate: (p: UpdateEmployeeRequest) => Promise<void> }
+  | { mode: "create"; employees: Employee[]; currentUserId: string | null; onCancel: () => void; onCreate: (p: CreateEmployeeRequest) => Promise<void> }
+  | { mode: "edit"; employee: Employee; employees: Employee[]; currentUserId: string | null; onCancel: () => void; onUpdate: (p: UpdateEmployeeRequest) => Promise<void> }
 ) {
   const isCreate = props.mode === "create";
   const employee = "employee" in props ? props.employee : null;
@@ -276,6 +293,10 @@ function EmployeeForm(props:
     try {
       if (phones.length < 2) throw new Error("At least two phones are required.");
       if (!birthDate) throw new Error("Birth date is required.");
+      const normalizedPhones = phones.map((p) => p.number.trim());
+      if (new Set(normalizedPhones).size !== normalizedPhones.length) {
+        throw new Error("Phone numbers must be unique.");
+      }
 
       if (isCreate) {
         const payload: CreateEmployeeRequest = {
@@ -287,7 +308,7 @@ function EmployeeForm(props:
           role: role as any,
           phones,
           password,
-          managerEmployeeId: managerSelected?.id ?? null,
+          managerEmployeeId: managerSelected?.id ?? (props.currentUserId ?? null),
         };
         await props.onCreate(payload);
       } else {

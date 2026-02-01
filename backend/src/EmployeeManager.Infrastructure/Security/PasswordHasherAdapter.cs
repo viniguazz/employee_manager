@@ -11,6 +11,9 @@ public sealed class PasswordHasherAdapter : IPasswordHasher
         => _hasher.HashPassword(new object(), password);
 
     public bool Verify(string password, string passwordHash)
-        => _hasher.VerifyHashedPassword(new object(), passwordHash, password)
-           == PasswordVerificationResult.Success;
+    {
+        var result = _hasher.VerifyHashedPassword(new object(), passwordHash, password);
+        return result == PasswordVerificationResult.Success
+            || result == PasswordVerificationResult.SuccessRehashNeeded;
+    }
 }
