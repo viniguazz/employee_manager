@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import EmployeesPage from "./pages/EmployeesPage";
@@ -6,7 +7,7 @@ function isAuthed() {
   return !!localStorage.getItem("accessToken");
 }
 
-function PrivateRoute({ children }: { children: JSX.Element }) {
+function PrivateRoute({ children }: { children: ReactNode }) {
   return isAuthed() ? children : <Navigate to="/login" replace />;
 }
 
