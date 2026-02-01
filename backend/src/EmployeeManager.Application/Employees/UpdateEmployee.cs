@@ -17,7 +17,8 @@ public sealed record UpdateEmployeeCommand(
     Role Role,
     List<(string Number, string? Type)> Phones,
     Guid? ManagerEmployeeId,
-    string? Password
+    string? Password,
+    Guid? UpdatedById
 );
 
 public sealed class UpdateEmployee
@@ -77,14 +78,17 @@ public sealed class UpdateEmployee
             existing.CreatedAt,
             existing.UpdatedAt,
             existing.IsActive,
-            existing.DeactivatedAt
+            existing.DeactivatedAt,
+            existing.CreatedById,
+            existing.UpdatedById,
+            existing.InactivatedById
         );
 
         _logger.LogInformation(
-            "Employee domain rehydrated {EmployeeId} for update. PasswordChanged={PasswordChanged}",
-            updated.Id, passwordChanged);
+            "Employee domain rehydrated {EmployeeId} for update. PasswordChanged={PasswordChanged} UpdatedBy={UpdatedById}",
+            updated.Id, passwordChanged, cmd.UpdatedById);
 
-        updated.Touch();
+        updated.Touch(cmd.UpdatedById);
         await _repo.UpdateAsync(updated, ct);
 
         _logger.LogInformation("Employee updated {EmployeeId}", updated.Id);

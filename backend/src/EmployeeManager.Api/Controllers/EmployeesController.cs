@@ -53,6 +53,7 @@ public sealed class EmployeesController : ControllerBase
             req.Phones.Select(p => (p.Number, p.Type)).ToList(),
             req.Password,
             req.ManagerEmployeeId ?? creatorId,
+            creatorId,
             creatorRole
         ), ct);
 
@@ -151,7 +152,8 @@ public sealed class EmployeesController : ControllerBase
             req.Role,
             req.Phones.Select(p => (p.Number, p.Type)).ToList(),
             req.ManagerEmployeeId,
-            req.Password
+            req.Password,
+            userId
         ), ct);
 
         return NoContent();
@@ -172,7 +174,7 @@ public sealed class EmployeesController : ControllerBase
             if (!(await repo.IsManagedByAsync(id, userId, ct))) return NotFound();
         }
 
-        await useCase.ExecuteAsync(id, ct);
+        await useCase.ExecuteAsync(id, userId, ct);
         return NoContent();
     }
 

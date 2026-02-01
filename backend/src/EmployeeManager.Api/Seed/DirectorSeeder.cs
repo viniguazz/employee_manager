@@ -65,6 +65,9 @@ public static class DirectorSeeder
             UpdatedAt = DateTime.UtcNow,
             IsActive = true,
             DeactivatedAt = null,
+            CreatedById = null,
+            UpdatedById = null,
+            InactivatedById = null,
             PasswordHash = hasher.Hash(password),
             ManagerEmployeeId = null,
             Phones = new List<EmployeePhoneEntity>

@@ -17,7 +17,7 @@ public interface IEmployeeRepository
     Task<bool> IsManagedByAsync(Guid employeeId, Guid managerId, CancellationToken ct);
 
     Task UpdateAsync(Employee employee, CancellationToken ct);
-    Task<bool> RemoveAsync(Guid id, CancellationToken ct);
+    Task<bool> RemoveAsync(Guid id, Guid? inactivatedById, CancellationToken ct);
 
     Task<Employee?> GetByEmailAsync(string email, CancellationToken ct);
 }

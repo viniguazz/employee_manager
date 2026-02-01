@@ -19,6 +19,9 @@ public sealed class Employee
     public DateTime UpdatedAt { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime? DeactivatedAt { get; private set; }
+    public Guid? CreatedById { get; private set; }
+    public Guid? UpdatedById { get; private set; }
+    public Guid? InactivatedById { get; private set; }
 
     public Guid? ManagerEmployeeId { get; private set; }
 
@@ -40,7 +43,8 @@ public sealed class Employee
         Role role,
         IEnumerable<Phone> phones,
         string passwordHash,
-        Guid? managerEmployeeId = null)
+        Guid? managerEmployeeId = null,
+        Guid? createdById = null)
     {
         Id = Guid.NewGuid();
         FirstName = Require(firstName, "First name");
@@ -57,6 +61,9 @@ public sealed class Employee
         UpdatedAt = CreatedAt;
         IsActive = true;
         DeactivatedAt = null;
+        CreatedById = createdById;
+        UpdatedById = createdById;
+        InactivatedById = null;
 
         var phoneList = phones?.ToList() ?? new List<Phone>();
         if (phoneList.Count < 2)
@@ -79,17 +86,20 @@ public sealed class Employee
         ManagerEmployeeId = managerEmployeeId;
     }
 
-    public void Touch()
+    public void Touch(Guid? updatedById = null)
     {
         UpdatedAt = DateTime.UtcNow;
+        UpdatedById = updatedById ?? UpdatedById;
     }
 
-    public void Deactivate()
+    public void Deactivate(Guid? inactivatedById = null)
     {
         if (!IsActive) return;
         IsActive = false;
         DeactivatedAt = DateTime.UtcNow;
         UpdatedAt = DeactivatedAt.Value;
+        InactivatedById = inactivatedById;
+        UpdatedById = inactivatedById ?? UpdatedById;
     }
 
     private static string Require(string value, string field)
@@ -155,7 +165,10 @@ public sealed class Employee
     DateTime createdAt,
     DateTime updatedAt,
     bool isActive,
-    DateTime? deactivatedAt)
+    DateTime? deactivatedAt,
+    Guid? createdById,
+    Guid? updatedById,
+    Guid? inactivatedById)
     {
         var e = new Employee(
             firstName,
@@ -166,7 +179,8 @@ public sealed class Employee
             role,
             phones,
             passwordHash,
-            managerEmployeeId
+            managerEmployeeId,
+            createdById
         );
 
         e.Id = id;
@@ -174,6 +188,9 @@ public sealed class Employee
         e.UpdatedAt = updatedAt;
         e.IsActive = isActive;
         e.DeactivatedAt = deactivatedAt;
+        e.CreatedById = createdById;
+        e.UpdatedById = updatedById;
+        e.InactivatedById = inactivatedById;
         return e;
     }
 }

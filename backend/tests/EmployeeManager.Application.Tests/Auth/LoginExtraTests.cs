@@ -3,6 +3,7 @@ using EmployeeManager.Application.Employees.Ports;
 using EmployeeManager.Application.Security;
 using EmployeeManager.Domain.Employees;
 using EmployeeManager.Domain.Roles;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace EmployeeManager.Application.Tests.Auth;
@@ -22,7 +23,7 @@ public sealed class LoginExtraTests
         var hasher = new FakeHasher(ok: true);
         var token = new FakeToken("TOKEN_OK");
 
-        var useCase = new Login(repo, hasher, token);
+        var useCase = new Login(repo, hasher, token, NullLogger<Login>.Instance);
 
         var res = await useCase.ExecuteAsync(
             new LoginCommand("  Director@Local.Dev  ", "Admin#123"),
@@ -46,7 +47,7 @@ public sealed class LoginExtraTests
         var hasher = new FakeHasher(ok: true);
         var token = new RecordingToken("TOKEN_OK");
 
-        var useCase = new Login(repo, hasher, token);
+        var useCase = new Login(repo, hasher, token, NullLogger<Login>.Instance);
 
         var res = await useCase.ExecuteAsync(
             new LoginCommand("director@local.dev", "Admin#123"),
@@ -62,8 +63,8 @@ public sealed class LoginExtraTests
     {
         var phones = new[]
         {
-            new Phone("+55 48 99999-1111", "mobile"),
-            new Phone("+55 48 3333-2222", "home")
+            new Phone("999991111", "mobile"),
+            new Phone("333322222", "home")
         };
 
         return Employee.Rehydrate(
@@ -71,13 +72,19 @@ public sealed class LoginExtraTests
             firstName: "Seed",
             lastName: "Director",
             email: email,
-            docNumber: "DOC",
+            docNumber: "12345678901",
             birthDate: new DateOnly(1990, 1, 1),
             role: role,
             phones: phones,
             passwordHash: hash,
             managerEmployeeId: null,
-            managerName: null);
+            createdAt: DateTime.UtcNow,
+            updatedAt: DateTime.UtcNow,
+            isActive: true,
+            deactivatedAt: null,
+            createdById: null,
+            updatedById: null,
+            inactivatedById: null);
     }
 
     private sealed class RecordingRepo : IEmployeeRepository
@@ -96,6 +103,12 @@ public sealed class LoginExtraTests
         public Task<bool> DocNumberExistsAsync(string docNumber, CancellationToken ct)
             => Task.FromResult(false);
 
+        public Task<bool> EmailExistsAsync(string email, Guid? excludeEmployeeId, CancellationToken ct)
+            => Task.FromResult(false);
+
+        public Task<bool> PhoneNumbersExistAsync(IEnumerable<string> numbers, Guid? excludeEmployeeId, CancellationToken ct)
+            => Task.FromResult(false);
+
         public Task AddAsync(Employee employee, CancellationToken ct)
             => throw new NotImplementedException();
 
@@ -105,10 +118,22 @@ public sealed class LoginExtraTests
         public Task<List<Employee>> ListAsync(int skip, int take, CancellationToken ct)
             => throw new NotImplementedException();
 
+        public Task<List<Employee>> ListByManagerAsync(Guid managerId, int skip, int take, CancellationToken ct)
+            => throw new NotImplementedException();
+
+        public Task<List<Employee>> SearchAsync(string query, int take, CancellationToken ct)
+            => throw new NotImplementedException();
+
+        public Task<List<Employee>> SearchByManagerAsync(Guid managerId, string query, int take, CancellationToken ct)
+            => throw new NotImplementedException();
+
         public Task UpdateAsync(Employee employee, CancellationToken ct)
             => throw new NotImplementedException();
 
-        public Task<bool> RemoveAsync(Guid id, CancellationToken ct)
+        public Task<bool> RemoveAsync(Guid id, Guid? inactivatedById, CancellationToken ct)
+            => throw new NotImplementedException();
+
+        public Task<bool> IsManagedByAsync(Guid employeeId, Guid managerId, CancellationToken ct)
             => throw new NotImplementedException();
     }
 

@@ -150,6 +150,9 @@ public sealed class EmployeeRepository : IEmployeeRepository
             UpdatedAt = e.UpdatedAt,
             IsActive = e.IsActive,
             DeactivatedAt = e.DeactivatedAt,
+            CreatedById = e.CreatedById,
+            UpdatedById = e.UpdatedById,
+            InactivatedById = e.InactivatedById,
             ManagerEmployeeId = e.ManagerEmployeeId,
             PasswordHash = e.PasswordHash,
             Phones = e.Phones.Select(p => new EmployeePhoneEntity
@@ -180,7 +183,10 @@ public sealed class EmployeeRepository : IEmployeeRepository
             e.CreatedAt,
             e.UpdatedAt,
             e.IsActive,
-            e.DeactivatedAt
+            e.DeactivatedAt,
+            e.CreatedById,
+            e.UpdatedById,
+            e.InactivatedById
         );
     }
 
@@ -202,6 +208,9 @@ public sealed class EmployeeRepository : IEmployeeRepository
         existing.UpdatedAt = employee.UpdatedAt;
         existing.IsActive = employee.IsActive;
         existing.DeactivatedAt = employee.DeactivatedAt;
+        existing.CreatedById = employee.CreatedById;
+        existing.UpdatedById = employee.UpdatedById;
+        existing.InactivatedById = employee.InactivatedById;
         existing.ManagerEmployeeId = employee.ManagerEmployeeId;
 
         await _db.EmployeePhones
@@ -221,7 +230,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<bool> RemoveAsync(Guid id, CancellationToken ct)
+    public async Task<bool> RemoveAsync(Guid id, Guid? inactivatedById, CancellationToken ct)
     {
         var existing = await _db.Employees.FirstOrDefaultAsync(e => e.Id == id && e.IsActive, ct);
         if (existing is null) return false;
@@ -229,6 +238,8 @@ public sealed class EmployeeRepository : IEmployeeRepository
         existing.IsActive = false;
         existing.DeactivatedAt = DateTime.UtcNow;
         existing.UpdatedAt = existing.DeactivatedAt.Value;
+        existing.InactivatedById = inactivatedById;
+        existing.UpdatedById = inactivatedById ?? existing.UpdatedById;
 
         await _db.SaveChangesAsync(ct);
         _logger.LogInformation("Employee soft-deleted {EmployeeId}", id);

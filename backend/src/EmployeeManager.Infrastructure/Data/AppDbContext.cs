@@ -44,6 +44,15 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.DeactivatedAt)
             .HasColumnName("deactivated_at");
 
+            b.Property(x => x.CreatedById)
+            .HasColumnName("created_by_id");
+
+            b.Property(x => x.UpdatedById)
+            .HasColumnName("updated_by_id");
+
+            b.Property(x => x.InactivatedById)
+            .HasColumnName("inactivated_by_id");
+
             b.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
 
             b.Property(x => x.ManagerEmployeeId).HasColumnName("manager_employee_id");

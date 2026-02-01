@@ -14,9 +14,9 @@ public sealed class DeleteEmployee
         _logger = logger;
     }
 
-    public async Task ExecuteAsync(Guid id, CancellationToken ct)
+    public async Task ExecuteAsync(Guid id, Guid? inactivatedById, CancellationToken ct)
     {
-        var removed = await _repo.RemoveAsync(id, ct);
+        var removed = await _repo.RemoveAsync(id, inactivatedById, ct);
         if (!removed)
         {
             _logger.LogWarning("Employee delete failed. Employee not found {EmployeeId}", id);

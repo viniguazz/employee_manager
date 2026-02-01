@@ -17,6 +17,7 @@ public sealed record CreateEmployeeCommand(
     List<(string Number, string? Type)> Phones,
     string Password,
     Guid? ManagerEmployeeId,
+    Guid? CreatedById,
     Role CreatorRole
 );
 
@@ -60,7 +61,8 @@ public sealed class CreateEmployee
         var employee = new Employee(
             cmd.FirstName, cmd.LastName, email, docNumber,
             cmd.BirthDate, cmd.Role, phones, passwordHash,
-            cmd.ManagerEmployeeId);
+            cmd.ManagerEmployeeId,
+            cmd.CreatedById);
 
         _logger.LogInformation(
             "Employee domain created {EmployeeId} with role {Role} and manager {ManagerId}",

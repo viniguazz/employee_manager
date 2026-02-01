@@ -3,6 +3,7 @@ using System;
 using EmployeeManager.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EmployeeManager.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260131133000_EmployeeAuditUsers")]
+    partial class EmployeeAuditUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,10 +52,6 @@ namespace EmployeeManager.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deactivated_at");
 
-                    b.Property<Guid?>("InactivatedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("inactivated_by_id");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
@@ -63,14 +62,18 @@ namespace EmployeeManager.Infrastructure.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("first_name");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("last_name");
+                    b.Property<Guid?>("InactivatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("inactivated_by_id");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
 
                     b.Property<Guid?>("ManagerEmployeeId")
                         .HasColumnType("uuid")

@@ -18,6 +18,9 @@ public sealed class EmployeeEntity
     public DateTime UpdatedAt { get; set; }
     public bool IsActive { get; set; }
     public DateTime? DeactivatedAt { get; set; }
+    public Guid? CreatedById { get; set; }
+    public Guid? UpdatedById { get; set; }
+    public Guid? InactivatedById { get; set; }
 
     public Guid? ManagerEmployeeId { get; set; }
 
