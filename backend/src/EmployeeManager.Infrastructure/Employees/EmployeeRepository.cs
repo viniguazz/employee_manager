@@ -204,6 +204,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
         existing.Email = employee.Email;
         existing.BirthDate = employee.BirthDate;
         existing.Role = employee.Role;
+        existing.PasswordHash = employee.PasswordHash;
         existing.CreatedAt = employee.CreatedAt;
         existing.UpdatedAt = employee.UpdatedAt;
         existing.IsActive = employee.IsActive;

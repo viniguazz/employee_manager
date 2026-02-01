@@ -139,6 +139,8 @@ public sealed class EmployeesController : ControllerBase
     {
         var (userId, role) = GetCurrentUser();
         _logger.LogInformation("PUT /employees/{EmployeeId} by {UserId} role {Role}", id, userId, role);
+        _logger.LogInformation("Update payload for {EmployeeId}: passwordProvided={PasswordProvided}",
+            id, !string.IsNullOrWhiteSpace(req.Password));
         if (role != Role.Director && !(await repo.IsManagedByAsync(id, userId, ct)))
             return NotFound();
 

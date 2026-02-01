@@ -59,7 +59,16 @@ public sealed class UpdateEmployee
 
         if (!string.IsNullOrWhiteSpace(cmd.Password))
         {
-            ValidatePassword(cmd.Password);
+            _logger.LogInformation("Password update requested for employee {EmployeeId}", existing.Id);
+            try
+            {
+                ValidatePassword(cmd.Password);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Password validation failed for employee {EmployeeId}", existing.Id);
+                throw;
+            }
             passwordHash = _hasher.Hash(cmd.Password);
             passwordChanged = true;
         }
