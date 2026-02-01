@@ -16,7 +16,6 @@ public sealed record CreateEmployeeCommand(
     List<(string Number, string? Type)> Phones,
     string Password,
     Guid? ManagerEmployeeId,
-    string? ManagerName,
     Role CreatorRole
 );
 
@@ -58,7 +57,7 @@ public sealed class CreateEmployee
         var employee = new Employee(
             cmd.FirstName, cmd.LastName, email, docNumber,
             cmd.BirthDate, cmd.Role, phones, passwordHash,
-            cmd.ManagerEmployeeId, cmd.ManagerName);
+            cmd.ManagerEmployeeId);
 
         await _repo.AddAsync(employee, ct);
         return employee.Id;

@@ -47,7 +47,6 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
 
             b.Property(x => x.ManagerEmployeeId).HasColumnName("manager_employee_id");
-            b.Property(x => x.ManagerName).HasColumnName("manager_name");
 
             b.HasMany(x => x.Phones)
             .WithOne(p => p.Employee)

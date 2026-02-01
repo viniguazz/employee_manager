@@ -96,7 +96,6 @@ public sealed class EmployeeRepository : IEmployeeRepository
             IsActive = e.IsActive,
             DeactivatedAt = e.DeactivatedAt,
             ManagerEmployeeId = e.ManagerEmployeeId,
-            ManagerName = e.ManagerName,
             PasswordHash = e.PasswordHash,
             Phones = e.Phones.Select(p => new EmployeePhoneEntity
             {
@@ -123,7 +122,6 @@ public sealed class EmployeeRepository : IEmployeeRepository
             phones,
             e.PasswordHash,
             e.ManagerEmployeeId,
-            e.ManagerName,
             e.CreatedAt,
             e.UpdatedAt,
             e.IsActive,
@@ -150,7 +148,6 @@ public sealed class EmployeeRepository : IEmployeeRepository
         existing.IsActive = employee.IsActive;
         existing.DeactivatedAt = employee.DeactivatedAt;
         existing.ManagerEmployeeId = employee.ManagerEmployeeId;
-        existing.ManagerName = employee.ManagerName;
 
         await _db.EmployeePhones
         .Where(p => p.EmployeeId == employee.Id)

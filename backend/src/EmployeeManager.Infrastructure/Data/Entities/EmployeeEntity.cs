@@ -20,7 +20,6 @@ public sealed class EmployeeEntity
     public DateTime? DeactivatedAt { get; set; }
 
     public Guid? ManagerEmployeeId { get; set; }
-    public string? ManagerName { get; set; }
 
     public string PasswordHash { get; set; } = default!;
 

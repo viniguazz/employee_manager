@@ -6,11 +6,12 @@ public sealed record UpdateEmployeeRequest(
     string FirstName,
     string LastName,
     string Email,
+    string DocNumber,
     DateOnly BirthDate,
     Role Role,
     List<UpdateEmployeePhoneRequest> Phones,
     Guid? ManagerEmployeeId,
-    string? ManagerName
+    string? Password
 );
 
 public sealed record UpdateEmployeePhoneRequest(

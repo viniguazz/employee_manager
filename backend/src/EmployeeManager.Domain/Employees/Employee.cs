@@ -21,7 +21,6 @@ public sealed class Employee
     public DateTime? DeactivatedAt { get; private set; }
 
     public Guid? ManagerEmployeeId { get; private set; }
-    public string? ManagerName { get; private set; }
 
     private readonly List<Phone> _phones = new();
     public IReadOnlyCollection<Phone> Phones => _phones.AsReadOnly();
@@ -41,8 +40,7 @@ public sealed class Employee
         Role role,
         IEnumerable<Phone> phones,
         string passwordHash,
-        Guid? managerEmployeeId = null,
-        string? managerName = null)
+        Guid? managerEmployeeId = null)
     {
         Id = Guid.NewGuid();
         FirstName = Require(firstName, "First name");
@@ -67,40 +65,18 @@ public sealed class Employee
 
         PasswordHash = Require(passwordHash, "Password hash");
 
-        if (managerEmployeeId is null && !string.IsNullOrWhiteSpace(managerName))
-        {
-            ManagerName = managerName.Trim();
-        }
-        else
-        {
-            if (managerEmployeeId == Id)
-                throw new ArgumentException("Employee cannot be their own manager.");
+        if (managerEmployeeId == Id)
+            throw new ArgumentException("Employee cannot be their own manager.");
 
-            ManagerEmployeeId = managerEmployeeId;
-        }
+        ManagerEmployeeId = managerEmployeeId;
     }
 
-    public void UpdateManager(Guid? managerEmployeeId, string? managerName)
+    public void UpdateManager(Guid? managerEmployeeId)
     {
-        if (managerEmployeeId is null && string.IsNullOrWhiteSpace(managerName))
-        {
-            ManagerEmployeeId = null;
-            ManagerName = null;
-            return;
-        }
+        if (managerEmployeeId == Id)
+            throw new ArgumentException("Employee cannot be their own manager.");
 
-        if (managerEmployeeId is not null)
-        {
-            if (managerEmployeeId == Id)
-                throw new ArgumentException("Employee cannot be their own manager.");
-
-            ManagerEmployeeId = managerEmployeeId;
-            ManagerName = null;
-            return;
-        }
-
-        ManagerEmployeeId = null;
-        ManagerName = managerName!.Trim();
+        ManagerEmployeeId = managerEmployeeId;
     }
 
     public void Touch()
@@ -176,7 +152,6 @@ public sealed class Employee
     IEnumerable<Phone> phones,
     string passwordHash,
     Guid? managerEmployeeId,
-    string? managerName,
     DateTime createdAt,
     DateTime updatedAt,
     bool isActive,
@@ -191,8 +166,7 @@ public sealed class Employee
             role,
             phones,
             passwordHash,
-            managerEmployeeId,
-            managerName
+            managerEmployeeId
         );
 
         e.Id = id;

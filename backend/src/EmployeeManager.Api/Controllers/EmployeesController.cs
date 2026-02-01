@@ -42,7 +42,6 @@ public sealed class EmployeesController : ControllerBase
             req.Phones.Select(p => (p.Number, p.Type)).ToList(),
             req.Password,
             req.ManagerEmployeeId ?? creatorId,
-            req.ManagerName,
             creatorRole
         ), ct);
 
@@ -102,8 +101,7 @@ public sealed class EmployeesController : ControllerBase
             e.BirthDate,
             e.Role,
             e.Phones.Select(p => new EmployeePhoneResponse(p.Number, p.Type)).ToList(),
-            e.ManagerEmployeeId,
-            e.ManagerName
+            e.ManagerEmployeeId
         );
     
     [HttpPut("{id:guid}")]
@@ -118,11 +116,12 @@ public sealed class EmployeesController : ControllerBase
             req.FirstName,
             req.LastName,
             req.Email,
+            req.DocNumber,
             req.BirthDate,
             req.Role,
             req.Phones.Select(p => (p.Number, p.Type)).ToList(),
             req.ManagerEmployeeId,
-            req.ManagerName
+            req.Password
         ), ct);
 
         return NoContent();

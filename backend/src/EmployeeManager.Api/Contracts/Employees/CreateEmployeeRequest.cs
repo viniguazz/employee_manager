@@ -11,8 +11,7 @@ public sealed record CreateEmployeeRequest(
     Role Role,
     List<CreateEmployeePhoneRequest> Phones,
     string Password,
-    Guid? ManagerEmployeeId,
-    string? ManagerName
+    Guid? ManagerEmployeeId
 );
 
 public sealed record CreateEmployeePhoneRequest(

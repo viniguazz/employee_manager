@@ -11,8 +11,7 @@ public sealed record EmployeeResponse(
     DateOnly BirthDate,
     Role Role,
     List<EmployeePhoneResponse> Phones,
-    Guid? ManagerEmployeeId,
-    string? ManagerName
+    Guid? ManagerEmployeeId
 );
 
 public sealed record EmployeePhoneResponse(

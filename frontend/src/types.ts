@@ -14,7 +14,6 @@ export type Employee = {
   role: Role;
   phones: Phone[];
   managerEmployeeId?: string | null;
-  managerName?: string | null;
 };
 
 export type EmployeeLookup = {
@@ -36,14 +35,16 @@ export type CreateEmployeeRequest = {
   phones: Phone[];
   password: string;
   managerEmployeeId?: string | null;
-  managerName?: string | null;
 };
 
 export type UpdateEmployeeRequest = {
   firstName: string;
   lastName: string;
   email: string;
+  docNumber: string;
+  birthDate: string;
+  role: Role;
   phones: Phone[];
   managerEmployeeId?: string | null;
-  managerName?: string | null;
+  password?: string | null;
 };

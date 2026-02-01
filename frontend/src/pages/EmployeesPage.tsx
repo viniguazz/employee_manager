@@ -215,9 +215,7 @@ function EmployeeForm(props:
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const [managerQuery, setManagerQuery] = useState(
-    isCreate ? "" : (employee!.managerName ?? "")
-  );
+  const [managerQuery, setManagerQuery] = useState("");
   const [managerResults, setManagerResults] = useState<EmployeeLookup[]>([]);
   const [managerLoading, setManagerLoading] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
@@ -289,7 +287,6 @@ function EmployeeForm(props:
           phones,
           password,
           managerEmployeeId: managerSelected?.id ?? null,
-          managerName: null,
         };
         await props.onCreate(payload);
       } else {
@@ -297,9 +294,12 @@ function EmployeeForm(props:
           firstName,
           lastName,
           email,
+          docNumber,
+          birthDate,
+          role: role as any,
           phones,
           managerEmployeeId: managerSelected?.id ?? employee!.managerEmployeeId ?? null,
-          managerName: managerSelected ? null : (employee!.managerName ?? null),
+          password: password.trim() ? password : null,
         };
         await props.onUpdate(payload);
       }
@@ -328,35 +328,31 @@ function EmployeeForm(props:
             <input className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
 
-          {isCreate && (
-            <>
-              <div className="col-md-6">
-                <label className="form-label">Document number</label>
-                <input
-                  className="form-control"
-                  value={docNumber}
-                  onChange={(e) => setDocNumber(e.target.value)}
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Birth date</label>
-                <input
-                  className="form-control"
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Role</label>
-                <select className="form-select" value={role} onChange={(e) => setRole(Number(e.target.value))}>
-                  <option value={0}>employee</option>
-                  <option value={1}>leader</option>
-                  <option value={2}>director</option>
-                </select>
-              </div>
-            </>
-          )}
+          <div className="col-md-6">
+            <label className="form-label">Document number</label>
+            <input
+              className="form-control"
+              value={docNumber}
+              onChange={(e) => setDocNumber(e.target.value)}
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Birth date</label>
+            <input
+              className="form-control"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Role</label>
+            <select className="form-select" value={role} onChange={(e) => setRole(Number(e.target.value))}>
+              <option value={0}>employee</option>
+              <option value={1}>leader</option>
+              <option value={2}>director</option>
+            </select>
+          </div>
           <div className="col-md-6">
             <label className="form-label">Manager</label>
             <input
@@ -400,34 +396,35 @@ function EmployeeForm(props:
               <div className="small text-muted mt-1">Selected manager: {managerSelected.name}</div>
             )}
           </div>
-          {isCreate && (
-            <div className="col-md-6">
-              <label className="form-label">Password</label>
-              <div className="input-group">
-                <input
-                  className="form-control"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                    <path
-                      d="M12 5C6.5 5 2 9 1 12c1 3 5.5 7 11 7s10-4 11-7c-1-3-5.5-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
-                      fill="currentColor"
-                    />
-                    <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-                  </svg>
-                </button>
-              </div>
+          <div className="col-md-6">
+            <label className="form-label">Password</label>
+            <div className="input-group">
+              <input
+                className="form-control"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path
+                    d="M12 5C6.5 5 2 9 1 12c1 3 5.5 7 11 7s10-4 11-7c-1-3-5.5-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
+                    fill="currentColor"
+                  />
+                  <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                </svg>
+              </button>
             </div>
-          )}
+            {!isCreate && (
+              <div className="form-text">Leave blank to keep current password.</div>
+            )}
+          </div>
         </div>
 
         <div className="mt-3">

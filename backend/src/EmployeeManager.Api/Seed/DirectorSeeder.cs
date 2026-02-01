@@ -61,7 +61,6 @@ public static class DirectorSeeder
             DeactivatedAt = null,
             PasswordHash = hasher.Hash(password),
             ManagerEmployeeId = null,
-            ManagerName = null,
             Phones = new List<EmployeePhoneEntity>
             {
                 new()
