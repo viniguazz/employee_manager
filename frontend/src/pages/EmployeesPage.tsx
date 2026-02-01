@@ -105,6 +105,7 @@ export default function EmployeesPage() {
         {mode === "create" && (
           <EmployeeForm
             mode="create"
+            employees={items}
             onCancel={() => setMode("none")}
             onCreate={onCreate}
           />
@@ -114,6 +115,7 @@ export default function EmployeesPage() {
           <EmployeeForm
             mode="edit"
             employee={editing}
+            employees={items}
             onCancel={() => { setMode("none"); setEditing(null); }}
             onUpdate={(payload) => onUpdate(editing.id, payload)}
           />
@@ -187,10 +189,11 @@ export default function EmployeesPage() {
 }
 
 function EmployeeForm(props:
-  | { mode: "create"; onCancel: () => void; onCreate: (p: CreateEmployeeRequest) => Promise<void> }
-  | { mode: "edit"; employee: Employee; onCancel: () => void; onUpdate: (p: UpdateEmployeeRequest) => Promise<void> }
+  | { mode: "create"; employees: Employee[]; onCancel: () => void; onCreate: (p: CreateEmployeeRequest) => Promise<void> }
+  | { mode: "edit"; employee: Employee; employees: Employee[]; onCancel: () => void; onUpdate: (p: UpdateEmployeeRequest) => Promise<void> }
 ) {
   const isCreate = props.mode === "create";
+  const employee = "employee" in props ? props.employee : null;
 
   function toInputDate(value: string) {
     if (!value) return "";
@@ -199,21 +202,21 @@ function EmployeeForm(props:
     return d.toISOString().slice(0, 10);
   }
 
-  const [firstName, setFirstName] = useState(isCreate ? "" : props.employee.firstName);
-  const [lastName, setLastName] = useState(isCreate ? "" : props.employee.lastName);
-  const [email, setEmail] = useState(isCreate ? "" : props.employee.email);
+  const [firstName, setFirstName] = useState(isCreate ? "" : employee!.firstName);
+  const [lastName, setLastName] = useState(isCreate ? "" : employee!.lastName);
+  const [email, setEmail] = useState(isCreate ? "" : employee!.email);
 
-  const [docNumber, setDocNumber] = useState(isCreate ? "" : props.employee.docNumber);
+  const [docNumber, setDocNumber] = useState(isCreate ? "" : employee!.docNumber);
   const [birthDate, setBirthDate] = useState(
-    isCreate ? "" : toInputDate(props.employee.birthDate)
+    isCreate ? "" : toInputDate(employee!.birthDate)
   );
 
-  const [role, setRole] = useState<number>(isCreate ? 1 : props.employee.role);
+  const [role, setRole] = useState<number>(isCreate ? 1 : employee!.role);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [managerQuery, setManagerQuery] = useState(
-    isCreate ? "" : (props.employee.managerName ?? "")
+    isCreate ? "" : (employee!.managerName ?? "")
   );
   const [managerResults, setManagerResults] = useState<EmployeeLookup[]>([]);
   const [managerLoading, setManagerLoading] = useState(false);
@@ -221,7 +224,7 @@ function EmployeeForm(props:
   const [managerSelected, setManagerSelected] = useState<EmployeeLookup | null>(null);
 
   const [phones, setPhones] = useState<Phone[]>(
-    isCreate ? emptyPhones() : (props.employee.phones?.length ? props.employee.phones : emptyPhones())
+    isCreate ? emptyPhones() : (employee!.phones?.length ? employee!.phones : emptyPhones())
   );
 
   const [saving, setSaving] = useState(false);
@@ -249,6 +252,19 @@ function EmployeeForm(props:
 
     return () => clearTimeout(handle);
   }, [managerQuery]);
+
+  useEffect(() => {
+    if (isCreate) return;
+    if (managerQuery.trim().length > 0) return;
+
+    const managerId = employee!.managerEmployeeId;
+    if (!managerId) return;
+
+    const found = props.employees.find((e) => e.id === managerId);
+    if (found) {
+      setManagerQuery(`${found.firstName} ${found.lastName} (${found.email})`);
+    }
+  }, [isCreate, managerQuery, employee, props.employees]);
 
   function updatePhoneNumber(idx: number, value: string) {
     setPhones((prev) => prev.map((p, i) => (i === idx ? { ...p, number: value } : p)));
@@ -282,8 +298,8 @@ function EmployeeForm(props:
           lastName,
           email,
           phones,
-          managerEmployeeId: managerSelected?.id ?? props.employee.managerEmployeeId ?? null,
-          managerName: managerSelected ? null : (props.employee.managerName ?? null),
+          managerEmployeeId: managerSelected?.id ?? employee!.managerEmployeeId ?? null,
+          managerName: managerSelected ? null : (employee!.managerName ?? null),
         };
         await props.onUpdate(payload);
       }

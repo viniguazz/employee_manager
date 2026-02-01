@@ -58,9 +58,16 @@ public sealed class Employee
         PasswordHash = Require(passwordHash, "Password hash");
 
         if (managerEmployeeId is null && !string.IsNullOrWhiteSpace(managerName))
+        {
             ManagerName = managerName.Trim();
+        }
         else
+        {
+            if (managerEmployeeId == Id)
+                throw new ArgumentException("Employee cannot be their own manager.");
+
             ManagerEmployeeId = managerEmployeeId;
+        }
     }
 
     public void UpdateManager(Guid? managerEmployeeId, string? managerName)
@@ -74,6 +81,9 @@ public sealed class Employee
 
         if (managerEmployeeId is not null)
         {
+            if (managerEmployeeId == Id)
+                throw new ArgumentException("Employee cannot be their own manager.");
+
             ManagerEmployeeId = managerEmployeeId;
             ManagerName = null;
             return;
