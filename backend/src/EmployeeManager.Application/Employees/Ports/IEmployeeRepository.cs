@@ -12,6 +12,9 @@ public interface IEmployeeRepository
     Task<Employee?> GetByIdAsync(Guid id, CancellationToken ct);
     Task<List<Employee>> ListAsync(int skip, int take, CancellationToken ct);
     Task<List<Employee>> SearchAsync(string query, int take, CancellationToken ct);
+    Task<List<Employee>> ListByManagerAsync(Guid managerId, int skip, int take, CancellationToken ct);
+    Task<List<Employee>> SearchByManagerAsync(Guid managerId, string query, int take, CancellationToken ct);
+    Task<bool> IsManagedByAsync(Guid employeeId, Guid managerId, CancellationToken ct);
 
     Task UpdateAsync(Employee employee, CancellationToken ct);
     Task<bool> RemoveAsync(Guid id, CancellationToken ct);

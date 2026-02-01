@@ -275,6 +275,7 @@ function EmployeeForm(props:
 
     try {
       if (phones.length < 2) throw new Error("At least two phones are required.");
+      if (!birthDate) throw new Error("Birth date is required.");
 
       if (isCreate) {
         const payload: CreateEmployeeRequest = {

@@ -1,9 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using EmployeeManager.Api.Contracts.Employees;
 using EmployeeManager.Application.Employees;
 using EmployeeManager.Domain.Employees;
+using EmployeeManager.Application.Employees.Ports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using EmployeeManager.Domain.Roles;
 
 namespace EmployeeManager.Api.Controllers;
 
@@ -22,7 +25,7 @@ public sealed class EmployeesController : ControllerBase
         var passwordHash = "TEMP_HASH_" + req.Password;
 
         var creatorIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (creatorIdStr is null || !Guid.TryParse(creatorIdStr, out var creatorId))
         {
             var claimsDump = string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
@@ -30,8 +33,8 @@ public sealed class EmployeesController : ControllerBase
             throw new InvalidOperationException("Invalid creator identity.");
         }
 
-        var creatorRoleStr = User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value;
-        var creatorRole = Enum.Parse<EmployeeManager.Domain.Roles.Role>(creatorRoleStr);
+        var creatorRoleStr = User.Claims.First(c => c.Type == ClaimTypes.Role).Value;
+        var creatorRole = Enum.Parse<Role>(creatorRoleStr);
         var id = await useCase.ExecuteAsync(new CreateEmployeeCommand(
             req.FirstName,
             req.LastName,
@@ -51,9 +54,14 @@ public sealed class EmployeesController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(
         [FromServices] GetEmployee useCase,
+        [FromServices] IEmployeeRepository repo,
         Guid id,
         CancellationToken ct)
     {
+        var (userId, role) = GetCurrentUser();
+        if (role != Role.Director && !(await repo.IsManagedByAsync(id, userId, ct)))
+            return NotFound();
+
         var employee = await useCase.ExecuteAsync(id, ct);
         if (employee is null) return NotFound();
 
@@ -63,6 +71,7 @@ public sealed class EmployeesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List(
         [FromServices] ListEmployees useCase,
+        [FromServices] IEmployeeRepository repo,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20,
         CancellationToken ct = default)
@@ -70,7 +79,10 @@ public sealed class EmployeesController : ControllerBase
         take = Math.Clamp(take, 1, 100);
         skip = Math.Max(0, skip);
 
-        var employees = await useCase.ExecuteAsync(skip, take, ct);
+        var (userId, role) = GetCurrentUser();
+        var employees = role == Role.Director
+            ? await useCase.ExecuteAsync(skip, take, ct)
+            : await repo.ListByManagerAsync(userId, skip, take, ct);
         return Ok(employees.Select(ToResponse));
     }
 
@@ -107,10 +119,15 @@ public sealed class EmployeesController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(
         [FromServices] UpdateEmployee useCase,
+        [FromServices] IEmployeeRepository repo,
         Guid id,
         [FromBody] UpdateEmployeeRequest req,
         CancellationToken ct)
     {
+        var (userId, role) = GetCurrentUser();
+        if (role != Role.Director && !(await repo.IsManagedByAsync(id, userId, ct)))
+            return NotFound();
+
         await useCase.ExecuteAsync(new UpdateEmployeeCommand(
             id,
             req.FirstName,
@@ -130,10 +147,30 @@ public sealed class EmployeesController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(
         [FromServices] DeleteEmployee useCase,
+        [FromServices] IEmployeeRepository repo,
         Guid id,
         CancellationToken ct)
     {
+        var (userId, role) = GetCurrentUser();
+        if (role != Role.Director)
+        {
+            if (id == userId) return Forbid();
+            if (!(await repo.IsManagedByAsync(id, userId, ct))) return NotFound();
+        }
+
         await useCase.ExecuteAsync(id, ct);
         return NoContent();
+    }
+
+    private (Guid userId, Role role) GetCurrentUser()
+    {
+        var userIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdStr is null || !Guid.TryParse(userIdStr, out var userId))
+            throw new InvalidOperationException("Invalid creator identity.");
+
+        var roleStr = User.Claims.First(c => c.Type == ClaimTypes.Role).Value;
+        var role = Enum.Parse<Role>(roleStr);
+        return (userId, role);
     }
 }

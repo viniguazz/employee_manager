@@ -35,11 +35,17 @@ public static class DirectorSeeder
         // (em DEV isso é ótimo; em PROD normalmente se faz fora do app)
         await db.Database.MigrateAsync();
 
-        // 4) Se já existe esse diretor por email, não faz nada
-        var exists = await db.Employees.AnyAsync(e => e.Email == email);
-        if (exists)
+        // 4) Se já existe esse diretor por email, atualiza a senha para o valor do seed
+        var existing = await db.Employees.FirstOrDefaultAsync(e => e.Email == email);
+        if (existing is not null)
         {
-            Console.WriteLine($">>> Seed: Director already exists ({email}). Skipping.");
+            existing.PasswordHash = hasher.Hash(password);
+            existing.UpdatedAt = DateTime.UtcNow;
+            existing.IsActive = true;
+            existing.DeactivatedAt = null;
+
+            await db.SaveChangesAsync();
+            Console.WriteLine($">>> Seed: Director already exists ({email}). Password reset from Seed.");
             return;
         }
 
