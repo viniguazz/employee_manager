@@ -7,6 +7,7 @@ using EmployeeManager.Application.Employees.Ports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using EmployeeManager.Domain.Roles;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManager.Api.Controllers;
 
@@ -15,10 +16,16 @@ namespace EmployeeManager.Api.Controllers;
 [Route("employees")]
 public sealed class EmployeesController : ControllerBase
 {
+    private readonly ILogger<EmployeesController> _logger;
+
+    public EmployeesController(ILogger<EmployeesController> logger)
+    {
+        _logger = logger;
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromServices] CreateEmployee useCase,
-        [FromServices] ILogger<EmployeesController> logger,
         [FromBody] CreateEmployeeRequest req,
         CancellationToken ct)
     {
@@ -29,12 +36,13 @@ public sealed class EmployeesController : ControllerBase
         if (creatorIdStr is null || !Guid.TryParse(creatorIdStr, out var creatorId))
         {
             var claimsDump = string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
-            logger.LogWarning("Invalid creator identity. Claims: {Claims}", claimsDump);
+            _logger.LogWarning("Invalid creator identity. Claims: {Claims}", claimsDump);
             throw new InvalidOperationException("Invalid creator identity.");
         }
 
         var creatorRoleStr = User.Claims.First(c => c.Type == ClaimTypes.Role).Value;
         var creatorRole = Enum.Parse<Role>(creatorRoleStr);
+        _logger.LogInformation("POST /employees by {UserId} role {Role}", creatorId, creatorRole);
         var id = await useCase.ExecuteAsync(new CreateEmployeeCommand(
             req.FirstName,
             req.LastName,
@@ -59,6 +67,7 @@ public sealed class EmployeesController : ControllerBase
         CancellationToken ct)
     {
         var (userId, role) = GetCurrentUser();
+        _logger.LogInformation("GET /employees/{EmployeeId} by {UserId} role {Role}", id, userId, role);
         if (role != Role.Director && !(await repo.IsManagedByAsync(id, userId, ct)))
             return NotFound();
 
@@ -80,6 +89,7 @@ public sealed class EmployeesController : ControllerBase
         skip = Math.Max(0, skip);
 
         var (userId, role) = GetCurrentUser();
+        _logger.LogInformation("GET /employees?skip={Skip}&take={Take} by {UserId} role {Role}", skip, take, userId, role);
         var employees = role == Role.Director
             ? await useCase.ExecuteAsync(skip, take, ct)
             : await repo.ListByManagerAsync(userId, skip, take, ct);
@@ -97,6 +107,8 @@ public sealed class EmployeesController : ControllerBase
             return Ok(Array.Empty<EmployeeLookupResponse>());
 
         take = Math.Clamp(take, 1, 20);
+        var (userId, role) = GetCurrentUser();
+        _logger.LogInformation("GET /employees/search?q={Query}&take={Take} by {UserId} role {Role}", q, take, userId, role);
         var employees = await useCase.ExecuteAsync(q, take, ct);
         var result = employees.Select(e =>
             new EmployeeLookupResponse(e.Id, $"{e.FirstName} {e.LastName}", e.Email));
@@ -125,6 +137,7 @@ public sealed class EmployeesController : ControllerBase
         CancellationToken ct)
     {
         var (userId, role) = GetCurrentUser();
+        _logger.LogInformation("PUT /employees/{EmployeeId} by {UserId} role {Role}", id, userId, role);
         if (role != Role.Director && !(await repo.IsManagedByAsync(id, userId, ct)))
             return NotFound();
 
@@ -152,6 +165,7 @@ public sealed class EmployeesController : ControllerBase
         CancellationToken ct)
     {
         var (userId, role) = GetCurrentUser();
+        _logger.LogInformation("DELETE /employees/{EmployeeId} by {UserId} role {Role}", id, userId, role);
         if (role != Role.Director)
         {
             if (id == userId) return Forbid();

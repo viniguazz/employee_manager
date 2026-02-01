@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using EmployeeManager.Application.Employees.Ports;
 using EmployeeManager.Domain.Employees;
 using EmployeeManager.Domain.Roles;
@@ -23,11 +24,13 @@ public sealed class CreateEmployee
 {
     private readonly IEmployeeRepository _repo;
     private readonly IPasswordHasher _hasher;
+    private readonly ILogger<CreateEmployee> _logger;
 
-    public CreateEmployee(IEmployeeRepository repo, IPasswordHasher hasher)
+    public CreateEmployee(IEmployeeRepository repo, IPasswordHasher hasher, ILogger<CreateEmployee> logger)
     {
         _repo = repo;
         _hasher = hasher;
+        _logger = logger;
     }
 
     public async Task<Guid> ExecuteAsync(CreateEmployeeCommand cmd, CancellationToken ct)
@@ -58,6 +61,10 @@ public sealed class CreateEmployee
             cmd.FirstName, cmd.LastName, email, docNumber,
             cmd.BirthDate, cmd.Role, phones, passwordHash,
             cmd.ManagerEmployeeId);
+
+        _logger.LogInformation(
+            "Employee domain created {EmployeeId} with role {Role} and manager {ManagerId}",
+            employee.Id, employee.Role, employee.ManagerEmployeeId);
 
         await _repo.AddAsync(employee, ct);
         return employee.Id;

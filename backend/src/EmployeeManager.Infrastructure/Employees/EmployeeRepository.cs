@@ -3,14 +3,20 @@ using EmployeeManager.Domain.Employees;
 using EmployeeManager.Infrastructure.Data;
 using EmployeeManager.Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManager.Infrastructure.Employees;
 
 public sealed class EmployeeRepository : IEmployeeRepository
 {
     private readonly AppDbContext _db;
+    private readonly ILogger<EmployeeRepository> _logger;
 
-    public EmployeeRepository(AppDbContext db) => _db = db;
+    public EmployeeRepository(AppDbContext db, ILogger<EmployeeRepository> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     public Task<bool> DocNumberExistsAsync(string docNumber, CancellationToken ct)
         => _db.Employees.AnyAsync(e => e.DocNumber == docNumber, ct);
@@ -36,6 +42,8 @@ public sealed class EmployeeRepository : IEmployeeRepository
         var entity = ToEntity(employee);
         _db.Employees.Add(entity);
         await _db.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Employee persisted {EmployeeId}", employee.Id);
     }
 
     public async Task<Employee?> GetByIdAsync(Guid id, CancellationToken ct)
@@ -43,6 +51,9 @@ public sealed class EmployeeRepository : IEmployeeRepository
         var entity = await _db.Employees
             .Include(e => e.Phones)
             .FirstOrDefaultAsync(e => e.Id == id && e.IsActive, ct);
+
+        if (entity is null)
+            _logger.LogDebug("Employee not found for GetById {EmployeeId}", id);
 
         return entity is null ? null : ToDomain(entity);
     }
@@ -57,6 +68,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
             .Take(take)
             .ToListAsync(ct);
 
+        _logger.LogDebug("Employees rehydrated for List {Count}", entities.Count);
         return entities.Select(ToDomain).ToList();
     }
 
@@ -70,6 +82,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
             .Take(take)
             .ToListAsync(ct);
 
+        _logger.LogDebug("Employees rehydrated for ListByManager {ManagerId} Count={Count}", managerId, entities.Count);
         return entities.Select(ToDomain).ToList();
     }
 
@@ -90,6 +103,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
             .Take(take)
             .ToListAsync(ct);
 
+        _logger.LogDebug("Employees rehydrated for Search {Query} Count={Count}", query, entities.Count);
         return entities.Select(ToDomain).ToList();
     }
 
@@ -111,6 +125,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
             .Take(take)
             .ToListAsync(ct);
 
+        _logger.LogDebug("Employees rehydrated for SearchByManager {ManagerId} Count={Count}", managerId, entities.Count);
         return entities.Select(ToDomain).ToList();
     }
 
@@ -216,6 +231,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
         existing.UpdatedAt = existing.DeactivatedAt.Value;
 
         await _db.SaveChangesAsync(ct);
+        _logger.LogInformation("Employee soft-deleted {EmployeeId}", id);
         return true;
     }
 

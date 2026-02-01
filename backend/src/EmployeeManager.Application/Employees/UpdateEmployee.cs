@@ -3,6 +3,7 @@ using EmployeeManager.Application.Employees.Ports;
 using EmployeeManager.Application.Security;
 using EmployeeManager.Domain.Employees;
 using EmployeeManager.Domain.Roles;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManager.Application.Employees;
 
@@ -23,11 +24,13 @@ public sealed class UpdateEmployee
 {
     private readonly IEmployeeRepository _repo;
     private readonly IPasswordHasher _hasher;
+    private readonly ILogger<UpdateEmployee> _logger;
 
-    public UpdateEmployee(IEmployeeRepository repo, IPasswordHasher hasher)
+    public UpdateEmployee(IEmployeeRepository repo, IPasswordHasher hasher, ILogger<UpdateEmployee> logger)
     {
         _repo = repo;
         _hasher = hasher;
+        _logger = logger;
     }
 
     public async Task ExecuteAsync(UpdateEmployeeCommand cmd, CancellationToken ct)
@@ -51,11 +54,13 @@ public sealed class UpdateEmployee
 
         var phones = cmd.Phones.Select(p => new Phone(p.Number.Trim(), p.Type)).ToList();
         var passwordHash = existing.PasswordHash;
+        var passwordChanged = false;
 
         if (!string.IsNullOrWhiteSpace(cmd.Password))
         {
             ValidatePassword(cmd.Password);
             passwordHash = _hasher.Hash(cmd.Password);
+            passwordChanged = true;
         }
 
         var updated = Employee.Rehydrate(
@@ -75,8 +80,14 @@ public sealed class UpdateEmployee
             existing.DeactivatedAt
         );
 
+        _logger.LogInformation(
+            "Employee domain rehydrated {EmployeeId} for update. PasswordChanged={PasswordChanged}",
+            updated.Id, passwordChanged);
+
         updated.Touch();
         await _repo.UpdateAsync(updated, ct);
+
+        _logger.LogInformation("Employee updated {EmployeeId}", updated.Id);
     }
 
     private static void ValidatePassword(string password)
