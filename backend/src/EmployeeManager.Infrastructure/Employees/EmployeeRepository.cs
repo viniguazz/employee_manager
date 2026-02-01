@@ -42,7 +42,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
     {
         var entity = await _db.Employees
             .Include(e => e.Phones)
-            .FirstOrDefaultAsync(e => e.Id == id, ct);
+            .FirstOrDefaultAsync(e => e.Id == id && e.IsActive, ct);
 
         return entity is null ? null : ToDomain(entity);
     }
@@ -51,6 +51,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
     {
         var entities = await _db.Employees
             .Include(e => e.Phones)
+            .Where(e => e.IsActive)
             .OrderBy(e => e.FirstName)
             .Skip(skip)
             .Take(take)
@@ -67,9 +68,10 @@ public sealed class EmployeeRepository : IEmployeeRepository
         var entities = await _db.Employees
             .Include(e => e.Phones)
             .Where(e =>
-                e.FirstName.ToLower().Contains(q) ||
-                e.LastName.ToLower().Contains(q) ||
-                e.Email.ToLower().Contains(q))
+                e.IsActive && (
+                    e.FirstName.ToLower().Contains(q) ||
+                    e.LastName.ToLower().Contains(q) ||
+                    e.Email.ToLower().Contains(q)))
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
             .Take(take)
@@ -89,6 +91,10 @@ public sealed class EmployeeRepository : IEmployeeRepository
             DocNumber = e.DocNumber,
             BirthDate = e.BirthDate,
             Role = e.Role,
+            CreatedAt = e.CreatedAt,
+            UpdatedAt = e.UpdatedAt,
+            IsActive = e.IsActive,
+            DeactivatedAt = e.DeactivatedAt,
             ManagerEmployeeId = e.ManagerEmployeeId,
             ManagerName = e.ManagerName,
             PasswordHash = e.PasswordHash,
@@ -117,7 +123,11 @@ public sealed class EmployeeRepository : IEmployeeRepository
             phones,
             e.PasswordHash,
             e.ManagerEmployeeId,
-            e.ManagerName
+            e.ManagerName,
+            e.CreatedAt,
+            e.UpdatedAt,
+            e.IsActive,
+            e.DeactivatedAt
         );
     }
 
@@ -135,6 +145,10 @@ public sealed class EmployeeRepository : IEmployeeRepository
         existing.Email = employee.Email;
         existing.BirthDate = employee.BirthDate;
         existing.Role = employee.Role;
+        existing.CreatedAt = employee.CreatedAt;
+        existing.UpdatedAt = employee.UpdatedAt;
+        existing.IsActive = employee.IsActive;
+        existing.DeactivatedAt = employee.DeactivatedAt;
         existing.ManagerEmployeeId = employee.ManagerEmployeeId;
         existing.ManagerName = employee.ManagerName;
 
@@ -157,10 +171,13 @@ public sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task<bool> RemoveAsync(Guid id, CancellationToken ct)
     {
-        var existing = await _db.Employees.FirstOrDefaultAsync(e => e.Id == id, ct);
+        var existing = await _db.Employees.FirstOrDefaultAsync(e => e.Id == id && e.IsActive, ct);
         if (existing is null) return false;
 
-        _db.Employees.Remove(existing);
+        existing.IsActive = false;
+        existing.DeactivatedAt = DateTime.UtcNow;
+        existing.UpdatedAt = existing.DeactivatedAt.Value;
+
         await _db.SaveChangesAsync(ct);
         return true;
     }
@@ -169,7 +186,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
     {
         var entity = await _db.Employees
         .Include(e => e.Phones)
-        .FirstOrDefaultAsync(e => e.Email == email.ToLower(), ct);
+        .FirstOrDefaultAsync(e => e.Email == email.ToLower() && e.IsActive, ct);
         return entity is null ? null : ToDomain(entity);
     }
 

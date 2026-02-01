@@ -50,9 +50,14 @@ public sealed class UpdateEmployee
             phones,
             existing.PasswordHash,
             cmd.ManagerEmployeeId,
-            cmd.ManagerName
+            cmd.ManagerName,
+            existing.CreatedAt,
+            existing.UpdatedAt,
+            existing.IsActive,
+            existing.DeactivatedAt
         );
 
+        updated.Touch();
         await _repo.UpdateAsync(updated, ct);
     }
 }

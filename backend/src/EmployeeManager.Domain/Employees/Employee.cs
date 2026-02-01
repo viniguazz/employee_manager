@@ -15,6 +15,11 @@ public sealed class Employee
     public DateOnly BirthDate { get; private set; }
     public Role Role { get; private set; }
 
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
+    public bool IsActive { get; private set; }
+    public DateTime? DeactivatedAt { get; private set; }
+
     public Guid? ManagerEmployeeId { get; private set; }
     public string? ManagerName { get; private set; }
 
@@ -46,9 +51,14 @@ public sealed class Employee
         DocNumber = ValidateDocNumber(Require(docNumber, "Doc number"));
 
         BirthDate = birthDate;
+        EnsureValidBirthDate(birthDate);
         EnsureAdult(birthDate);
 
         Role = role;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = CreatedAt;
+        IsActive = true;
+        DeactivatedAt = null;
 
         var phoneList = phones?.ToList() ?? new List<Phone>();
         if (phoneList.Count < 2)
@@ -93,6 +103,19 @@ public sealed class Employee
         ManagerName = managerName!.Trim();
     }
 
+    public void Touch()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        if (!IsActive) return;
+        IsActive = false;
+        DeactivatedAt = DateTime.UtcNow;
+        UpdatedAt = DeactivatedAt.Value;
+    }
+
     private static string Require(string value, string field)
     {
         value = (value ?? "").Trim();
@@ -133,6 +156,15 @@ public sealed class Employee
             throw new ArgumentException("Employee must be an adult (18+).");
     }
 
+    private static void EnsureValidBirthDate(DateOnly birthDate)
+    {
+        if (birthDate == DateOnly.MinValue)
+            throw new ArgumentException("Birth date is required.");
+
+        if (birthDate > DateOnly.FromDateTime(DateTime.UtcNow))
+            throw new ArgumentException("Birth date cannot be in the future.");
+    }
+
     public static Employee Rehydrate(
     Guid id,
     string firstName,
@@ -144,7 +176,11 @@ public sealed class Employee
     IEnumerable<Phone> phones,
     string passwordHash,
     Guid? managerEmployeeId,
-    string? managerName)
+    string? managerName,
+    DateTime createdAt,
+    DateTime updatedAt,
+    bool isActive,
+    DateTime? deactivatedAt)
     {
         var e = new Employee(
             firstName,
@@ -160,6 +196,10 @@ public sealed class Employee
         );
 
         e.Id = id;
+        e.CreatedAt = createdAt;
+        e.UpdatedAt = updatedAt;
+        e.IsActive = isActive;
+        e.DeactivatedAt = deactivatedAt;
         return e;
     }
 }

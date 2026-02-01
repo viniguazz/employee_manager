@@ -26,6 +26,24 @@ public sealed class AppDbContext : DbContext
             b.Property(x => x.BirthDate).HasColumnName("birth_date").IsRequired();
             b.Property(x => x.Role).HasColumnName("role").IsRequired();
 
+            b.Property(x => x.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+            b.Property(x => x.UpdatedAt)
+            .HasColumnName("updated_at")
+            .HasDefaultValueSql("now()")
+            .IsRequired();
+
+            b.Property(x => x.IsActive)
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
+
+            b.Property(x => x.DeactivatedAt)
+            .HasColumnName("deactivated_at");
+
             b.Property(x => x.PasswordHash).HasColumnName("password_hash").IsRequired();
 
             b.Property(x => x.ManagerEmployeeId).HasColumnName("manager_employee_id");

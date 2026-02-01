@@ -14,6 +14,11 @@ public sealed class EmployeeEntity
     public DateOnly BirthDate { get; set; }
     public Role Role { get; set; }
 
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime? DeactivatedAt { get; set; }
+
     public Guid? ManagerEmployeeId { get; set; }
     public string? ManagerName { get; set; }
 
