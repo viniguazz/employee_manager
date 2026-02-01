@@ -55,6 +55,7 @@ builder.Services.AddScoped<CreateEmployee>();
 
 builder.Services.AddScoped<GetEmployee>();
 builder.Services.AddScoped<ListEmployees>();
+builder.Services.AddScoped<SearchEmployees>();
 
 builder.Services.AddScoped<UpdateEmployee>();
 builder.Services.AddScoped<DeleteEmployee>();

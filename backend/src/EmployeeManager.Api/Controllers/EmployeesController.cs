@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using EmployeeManager.Api.Contracts.Employees;
 using EmployeeManager.Application.Employees;
 using EmployeeManager.Domain.Employees;
@@ -14,10 +15,20 @@ public sealed class EmployeesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromServices] CreateEmployee useCase,
+        [FromServices] ILogger<EmployeesController> logger,
         [FromBody] CreateEmployeeRequest req,
         CancellationToken ct)
     {
         var passwordHash = "TEMP_HASH_" + req.Password;
+
+        var creatorIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (creatorIdStr is null || !Guid.TryParse(creatorIdStr, out var creatorId))
+        {
+            var claimsDump = string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
+            logger.LogWarning("Invalid creator identity. Claims: {Claims}", claimsDump);
+            throw new InvalidOperationException("Invalid creator identity.");
+        }
 
         var creatorRoleStr = User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.Role).Value;
         var creatorRole = Enum.Parse<EmployeeManager.Domain.Roles.Role>(creatorRoleStr);
@@ -30,7 +41,7 @@ public sealed class EmployeesController : ControllerBase
             req.Role,
             req.Phones.Select(p => (p.Number, p.Type)).ToList(),
             req.Password,
-            req.ManagerEmployeeId,
+            req.ManagerEmployeeId ?? creatorId,
             req.ManagerName,
             creatorRole
         ), ct);
@@ -62,6 +73,23 @@ public sealed class EmployeesController : ControllerBase
 
         var employees = await useCase.ExecuteAsync(skip, take, ct);
         return Ok(employees.Select(ToResponse));
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search(
+        [FromServices] SearchEmployees useCase,
+        [FromQuery] string q,
+        [FromQuery] int take = 10,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+            return Ok(Array.Empty<EmployeeLookupResponse>());
+
+        take = Math.Clamp(take, 1, 20);
+        var employees = await useCase.ExecuteAsync(q, take, ct);
+        var result = employees.Select(e =>
+            new EmployeeLookupResponse(e.Id, $"{e.FirstName} {e.LastName}", e.Email));
+        return Ok(result);
     }
 
     private static EmployeeResponse ToResponse(Employee e)

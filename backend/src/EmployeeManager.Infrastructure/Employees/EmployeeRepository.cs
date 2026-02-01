@@ -59,6 +59,25 @@ public sealed class EmployeeRepository : IEmployeeRepository
         return entities.Select(ToDomain).ToList();
     }
 
+    public async Task<List<Employee>> SearchAsync(string query, int take, CancellationToken ct)
+    {
+        var q = query.Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(q)) return new List<Employee>();
+
+        var entities = await _db.Employees
+            .Include(e => e.Phones)
+            .Where(e =>
+                e.FirstName.ToLower().Contains(q) ||
+                e.LastName.ToLower().Contains(q) ||
+                e.Email.ToLower().Contains(q))
+            .OrderBy(e => e.FirstName)
+            .ThenBy(e => e.LastName)
+            .Take(take)
+            .ToListAsync(ct);
+
+        return entities.Select(ToDomain).ToList();
+    }
+
     private static EmployeeEntity ToEntity(Employee e)
     {
         var entity = new EmployeeEntity

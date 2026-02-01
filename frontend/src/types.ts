@@ -17,6 +17,12 @@ export type Employee = {
   managerName?: string | null;
 };
 
+export type EmployeeLookup = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 export type LoginRequest = { email: string; password: string };
 export type LoginResponse = { accessToken: string };
 

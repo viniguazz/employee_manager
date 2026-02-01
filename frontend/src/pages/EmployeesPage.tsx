@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
-import type { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, Phone } from "../types";
+import type { Employee, CreateEmployeeRequest, UpdateEmployeeRequest, Phone, EmployeeLookup } from "../types";
 import "./EmployeesPage.css";
 
 function emptyPhones(): Phone[] {
@@ -212,12 +212,43 @@ function EmployeeForm(props:
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [managerQuery, setManagerQuery] = useState(
+    isCreate ? "" : (props.employee.managerName ?? "")
+  );
+  const [managerResults, setManagerResults] = useState<EmployeeLookup[]>([]);
+  const [managerLoading, setManagerLoading] = useState(false);
+  const [managerOpen, setManagerOpen] = useState(false);
+  const [managerSelected, setManagerSelected] = useState<EmployeeLookup | null>(null);
+
   const [phones, setPhones] = useState<Phone[]>(
     isCreate ? emptyPhones() : (props.employee.phones?.length ? props.employee.phones : emptyPhones())
   );
 
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = managerQuery.trim();
+    if (q.length < 2) {
+      setManagerResults([]);
+      setManagerLoading(false);
+      return;
+    }
+
+    setManagerLoading(true);
+    const handle = setTimeout(async () => {
+      try {
+        const res = await api<EmployeeLookup[]>(`/employees/search?q=${encodeURIComponent(q)}`);
+        setManagerResults(res);
+      } catch {
+        setManagerResults([]);
+      } finally {
+        setManagerLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(handle);
+  }, [managerQuery]);
 
   function updatePhoneNumber(idx: number, value: string) {
     setPhones((prev) => prev.map((p, i) => (i === idx ? { ...p, number: value } : p)));
@@ -241,7 +272,7 @@ function EmployeeForm(props:
           role: role as any,
           phones,
           password,
-          managerEmployeeId: null,
+          managerEmployeeId: managerSelected?.id ?? null,
           managerName: null,
         };
         await props.onCreate(payload);
@@ -251,8 +282,8 @@ function EmployeeForm(props:
           lastName,
           email,
           phones,
-          managerEmployeeId: props.employee.managerEmployeeId ?? null,
-          managerName: props.employee.managerName ?? null,
+          managerEmployeeId: managerSelected?.id ?? props.employee.managerEmployeeId ?? null,
+          managerName: managerSelected ? null : (props.employee.managerName ?? null),
         };
         await props.onUpdate(payload);
       }
@@ -308,33 +339,78 @@ function EmployeeForm(props:
                   <option value={2}>director</option>
                 </select>
               </div>
-              <div className="col-md-6">
-                <label className="form-label">Password</label>
-                <div className="input-group">
-                  <input
-                    className="form-control"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showPassword}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                  >
-                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                      <path
-                        d="M12 5C6.5 5 2 9 1 12c1 3 5.5 7 11 7s10-4 11-7c-1-3-5.5-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
-                        fill="currentColor"
-                      />
-                      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
             </>
+          )}
+          <div className="col-md-6">
+            <label className="form-label">Manager</label>
+            <input
+              className="form-control"
+              value={managerQuery}
+              onChange={(e) => {
+                setManagerQuery(e.target.value);
+                if (managerSelected) setManagerSelected(null);
+                if (!managerOpen) setManagerOpen(true);
+              }}
+              onFocus={() => setManagerOpen(true)}
+              onBlur={() => setTimeout(() => setManagerOpen(false), 100)}
+            />
+            {managerOpen && managerQuery.trim().length >= 2 && (
+              <div className="list-group mt-1">
+                {managerLoading && (
+                  <div className="list-group-item small text-muted">Searching...</div>
+                )}
+                {!managerLoading && managerResults.length === 0 && (
+                  <div className="list-group-item small text-muted">No results</div>
+                )}
+                {!managerLoading && managerResults.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className="list-group-item list-group-item-action"
+                    onMouseDown={() => {
+                      setManagerSelected(m);
+                      setManagerQuery(`${m.name} (${m.email})`);
+                      setManagerResults([]);
+                      setManagerOpen(false);
+                    }}
+                  >
+                    <div className="fw-semibold">{m.name}</div>
+                    <div className="small text-muted">{m.email}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {managerSelected && (
+              <div className="small text-muted mt-1">Selected manager: {managerSelected.name}</div>
+            )}
+          </div>
+          {isCreate && (
+            <div className="col-md-6">
+              <label className="form-label">Password</label>
+              <div className="input-group">
+                <input
+                  className="form-control"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path
+                      d="M12 5C6.5 5 2 9 1 12c1 3 5.5 7 11 7s10-4 11-7c-1-3-5.5-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"
+                      fill="currentColor"
+                    />
+                    <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
