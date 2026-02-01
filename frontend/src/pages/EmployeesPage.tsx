@@ -192,12 +192,21 @@ function EmployeeForm(props:
 ) {
   const isCreate = props.mode === "create";
 
+  function toInputDate(value: string) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toISOString().slice(0, 10);
+  }
+
   const [firstName, setFirstName] = useState(isCreate ? "John" : props.employee.firstName);
   const [lastName, setLastName] = useState(isCreate ? "Doe" : props.employee.lastName);
   const [email, setEmail] = useState(isCreate ? "john@ex.com" : props.employee.email);
 
   const [docNumber, setDocNumber] = useState(isCreate ? "DOC-001" : props.employee.docNumber);
-  const [birthDate, setBirthDate] = useState(isCreate ? "1999-01-01" : props.employee.birthDate);
+  const [birthDate, setBirthDate] = useState(
+    isCreate ? "1999-01-01" : toInputDate(props.employee.birthDate)
+  );
 
   const [role, setRole] = useState<number>(isCreate ? 1 : props.employee.role);
   const [password, setPassword] = useState(isCreate ? "Ana#12345678" : "");
@@ -280,7 +289,12 @@ function EmployeeForm(props:
               </div>
               <div className="col-md-6">
                 <label className="form-label">Birth date</label>
-                <input className="form-control" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                <input
+                  className="form-control"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                />
               </div>
               <div className="col-md-6">
                 <label className="form-label">Role</label>
