@@ -19,12 +19,13 @@ public sealed class EmployeeRepository : IEmployeeRepository
     }
 
     public Task<bool> DocNumberExistsAsync(string docNumber, CancellationToken ct)
-        => _db.Employees.AnyAsync(e => e.DocNumber == docNumber, ct);
+        => _db.Employees.AnyAsync(e => e.DocNumber == docNumber && e.IsActive, ct);
 
     public Task<bool> EmailExistsAsync(string email, Guid? excludeEmployeeId, CancellationToken ct)
     {
         var normalized = email.ToLower();
         return _db.Employees.AnyAsync(e =>
+            e.IsActive &&
             e.Email.ToLower() == normalized &&
             (!excludeEmployeeId.HasValue || e.Id != excludeEmployeeId.Value), ct);
     }
@@ -34,7 +35,8 @@ public sealed class EmployeeRepository : IEmployeeRepository
         var list = numbers.ToList();
         return _db.EmployeePhones.AnyAsync(p =>
             list.Contains(p.Number) &&
-            (!excludeEmployeeId.HasValue || p.EmployeeId != excludeEmployeeId.Value), ct);
+            (!excludeEmployeeId.HasValue || p.EmployeeId != excludeEmployeeId.Value) &&
+            _db.Employees.Any(e => e.Id == p.EmployeeId && e.IsActive), ct);
     }
 
     public async Task AddAsync(Employee employee, CancellationToken ct)
